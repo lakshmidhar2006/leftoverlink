@@ -48,7 +48,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 // Use environment variables for production
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://leftoverlink-fl8t.onrender.com/api';
+const BACKEND_URL = 'https://leftoverlink-fl8t.onrender.com/api';
 
 // --- Authentication Context ---
 const AuthContext = createContext(null);
