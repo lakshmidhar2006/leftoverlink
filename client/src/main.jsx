@@ -1,12 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+import './index.css'; // Optional: for basic styling
 
-// We import the CSS file here, and Vite handles the rest.
-import './App.css';
+// Get the root element from your index.html
+const rootElement = document.getElementById('root');
+const root = ReactDOM.createRoot(rootElement);
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+// Render your app
+root.render(
   <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+    {/*
+      Wrap your <App /> component with <BrowserRouter>.
+      This provides the routing context to all components inside App.
+    */}
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
 );
