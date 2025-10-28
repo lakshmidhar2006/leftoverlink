@@ -29,9 +29,9 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 // --- Environment Variables ---
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://leftoverlink-2.onrender.com/api';
-const CLOUDINARY_CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'Root';
-const CLOUDINARY_UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET ||'leftoverlink_preset';
+const BACKEND_URL =  'https://leftoverlink-2.onrender.com/api';
+const CLOUDINARY_CLOUD_NAME =  'Root';
+const CLOUDINARY_UPLOAD_PRESET = 'leftoverlink_preset';
 
 if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
     console.warn(
