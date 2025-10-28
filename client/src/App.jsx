@@ -7,7 +7,13 @@ import React, {
     useRef,
     useCallback,
 } from 'react';
-import "./App.css"; // Ensure App.css is in the src folder
+// --- CSS Import ---
+// Ensure App.css is located in the same directory as App.jsx, or adjust the path.
+// For example, if App.jsx is in src/ and App.css is in src/, use "./App.css"
+// If App.css is in src/styles/, use "./styles/App.css"
+import "./App.css";
+// --- End CSS Import ---
+
 import {
     Routes,
     Route,
@@ -23,22 +29,38 @@ import {
 import {
     Users, Package, CheckCircle, LogIn, LogOut, UserPlus, LayoutDashboard,
     PlusCircle, Trash2, AlertCircle, X, Loader2, UtensilsCrossed, HeartHandshake,
-    CalendarDays, MapPin, List, Users2, ClipboardList, Edit3, Download, ImageOff // Import ImageOff
+    CalendarDays, MapPin, List, Users2, ClipboardList, Edit3, Download, ImageOff
 } from 'lucide-react';
+
+// --- External Libraries ---
+// IMPORTANT: Make sure you have installed these libraries:
+// npm install jspdf jspdf-autotable
+// or
+// yarn add jspdf jspdf-autotable
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+// --- End External Libraries ---
 
-// --- Environment Variables ---
-const BACKEND_URL =  'https://leftoverlink-2.onrender.com/api';
-const CLOUDINARY_CLOUD_NAME =  'Root';
+// --- HARD-CODED VALUES ---
+// We are hard-coding these to bypass any .env or Vercel issues
+const BACKEND_URL = 'https://leftoverlink-2.onrender.com/api';
+const CLOUDINARY_CLOUD_NAME = 'dox0hqyhh';
 const CLOUDINARY_UPLOAD_PRESET = 'leftoverlink_preset';
+// --- END HARD-CODED VALUES ---
+
+
+// --- CRITICAL DEBUGGING ---
+console.log("--- VERCEL DEPLOYMENT DEBUG ---");
+console.log("BACKEND_URL:", BACKEND_URL);
+console.log("CLOUDINARY_CLOUD_NAME:", CLOUDINARY_CLOUD_NAME);
+console.log("CLOUDINARY_UPLOAD_PRESET:", CLOUDINARY_UPLOAD_PRESET);
+// --- END DEBUGGING ---
 
 if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
     console.warn(
-        "REACT_APP_CLOUDINARY_CLOUD_NAME or REACT_APP_CLOUDINARY_UPLOAD_PRESET environment variables are not set in the .env file. Image uploads will fail."
+        "CRITICAL: CLOUDINARY_CLOUD_NAME or CLOUDINARY_UPLOAD_PRESET are not set! This should not happen with hard-coding."
     );
 }
-console.log("Backend URL:", BACKEND_URL); // For debugging
 
 // --- Authentication Context ---
 const AuthContext = createContext(null);
@@ -96,9 +118,9 @@ function AuthProvider({ children }) {
                 setToken(null); setUser(null); setRole(null);
             }
         } else {
-             console.log("No token/user in storage.");
-             // Ensure state is null if nothing in storage
-             setToken(null); setUser(null); setRole(null);
+            console.log("No token/user in storage.");
+            // Ensure state is null if nothing in storage
+            setToken(null); setUser(null); setRole(null);
         }
         setIsLoading(false); // Finished initial check
     }, []); // Removed logout dependency to prevent potential loops
@@ -373,8 +395,8 @@ function Header() {
                     {isLoggedIn ? (
                         <>
                             <span className="header-user-greeting">Hi, <span>{user?.name || 'User'}</span> {role === 'Admin' && '(Admin)'}</span>
-                             {/* Conditional Dashboard Link based on Role */}
-                             <HeaderButton
+                            {/* Conditional Dashboard Link based on Role */}
+                            <HeaderButton
                                 onClick={() => {
                                     if (role === 'Admin') navigate('/admin');
                                     else if (role === 'Donor') navigate('/donor');
@@ -452,26 +474,26 @@ function useApi() {
             if (contentType && contentType.includes("application/json")) {
                 dataOrError = await response.json();
             } else {
-                 // Handle non-JSON responses (like plain text errors from server)
-                 dataOrError = await response.text();
-                  // If response is OK but not JSON, return the text (or handle as needed)
-                  if (response.ok) return dataOrError || {}; // Return text or empty object for success
-                  // If response is NOT ok and not JSON, create an error from text
-                  throw new Error(dataOrError || `HTTP error! status: ${response.status}`);
+                // Handle non-JSON responses (like plain text errors from server)
+                dataOrError = await response.text();
+                // If response is OK but not JSON, return the text (or handle as needed)
+                if (response.ok) return dataOrError || {}; // Return text or empty object for success
+                // If response is NOT ok and not JSON, create an error from text
+                throw new Error(dataOrError || `HTTP error! status: ${response.status}`);
             }
         } catch (e) {
-             // Catch JSON parsing errors specifically
-             console.error("Failed to parse response:", e);
-             if (!response.ok) {
-                 throw new Error(`API error (${response.status}) with invalid response format.`);
-             }
-             // If response IS ok but JSON parsing failed (e.g., empty response body), return empty object
-             return {};
+            // Catch JSON parsing errors specifically
+            console.error("Failed to parse response:", e);
+            if (!response.ok) {
+                throw new Error(`API error (${response.status}) with invalid response format.`);
+            }
+            // If response IS ok but JSON parsing failed (e.g., empty response body), return empty object
+            return {};
         }
 
         if (!response.ok) {
             // Throw error using message from JSON if available, otherwise use status text
-             throw new Error(dataOrError.message || response.statusText || 'An API error occurred');
+            throw new Error(dataOrError.message || response.statusText || 'An API error occurred');
         }
 
         return dataOrError; // Return parsed JSON data on success
@@ -487,7 +509,7 @@ function useApi() {
         console.log(`API Call: ${options.method || 'GET'} ${BACKEND_URL}${endpoint}`); // Log API calls
         const response = await fetch(`${BACKEND_URL}${endpoint}`, { ...options, headers });
         return handleResponse(response);
-    }, [token, handleResponse]);
+    }, [token, handleResponse]); // BACKEND_URL is a global constant, no dependency needed
 
     return { jsonFetch };
 }
@@ -509,15 +531,15 @@ function LoginPage() {
         setIsLoading(true);
         try {
             await login(email, password);
-             // On successful login, AuthProvider handles navigation via redirectToDashboard
-             // Optional: Check if there's a location state to redirect back to
-             const from = location.state?.from?.pathname || null;
-             if (from) {
+            // On successful login, AuthProvider handles navigation via redirectToDashboard
+            // Optional: Check if there's a location state to redirect back to
+            const from = location.state?.from?.pathname || null;
+            if (from) {
                 // Note: AuthProvider already navigates based on role. This might conflict.
                 // It's usually better to let AuthProvider handle the post-login redirect.
                 // navigate(from, { replace: true });
                 console.log("Login successful, AuthProvider will redirect based on role.");
-             }
+            }
         } catch (err) {
             setError(err.message || "Login failed. Please check credentials.");
             setIsLoading(false); // Only stop loading on error
@@ -568,8 +590,8 @@ function RegisterPage() {
             return;
         }
         if (password.length < 6) { // Example: Enforce minimum password length
-             setError("Password must be at least 6 characters long.");
-             return;
+            setError("Password must be at least 6 characters long.");
+            return;
         }
 
 
@@ -590,7 +612,7 @@ function RegisterPage() {
                 <form className="auth-form" onSubmit={handleSubmit}> {/* Ensure class exists */}
                     <div className="auth-form-inputs"> {/* Ensure class exists */}
                         <AnimatePresence>
-                             {error && <ErrorMessage key="error-msg" message={error} onDismiss={() => setError(null)} />}
+                            {error && <ErrorMessage key="error-msg" message={error} onDismiss={() => setError(null)} />}
                         </AnimatePresence>
                         <Input id="name" name="name" type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
                         <Input id="email-address" name="email" type="email" autoComplete="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -623,7 +645,9 @@ const FormInput = React.forwardRef(({ label, id, type = 'text', placeholder, val
                 type={type}
                 placeholder={placeholder}
                 value={type !== 'file' ? value : undefined} // Don't control file input value
-                onChange={type !== 'file' ? onChange : props.onChange} // Pass onChange for file input
+                // --- FIX: Pass onChange directly ---
+                onChange={onChange}
+                // --- END FIX ---
                 required={required}
                 min={min}
                 step={step} // For number inputs
@@ -661,7 +685,7 @@ function FoodCard({ listing, onDelete, onEdit, showDelete, showEdit, onClaim }) 
             layout // Add layout prop for smooth animation if list changes
         >
             <div className="card-image-container"> {/* Ensure class exists */}
-                <img src={imageUrl} alt={listing.description} className="card-image" onError={(e) => e.target.src='https://placehold.co/600x400/a7a7a7/FFF?text=Image+Error'} /> {/* Ensure class exists, added onError */}
+                <img src={imageUrl} alt={listing.description} className="card-image" onError={(e) => e.target.src = 'https://placehold.co/600x400/a7a7a7/FFF?text=Image+Error'} /> {/* Ensure class exists, added onError */}
                 {(isExpired || isFullyClaimed) && (
                     <div className="card-status-overlay">{isExpired ? 'EXPIRED' : 'FULLY CLAIMED'}</div> // Ensure class exists
                 )}
@@ -680,7 +704,7 @@ function FoodCard({ listing, onDelete, onEdit, showDelete, showEdit, onClaim }) 
                     )}
 
                     {/* Show list of claimants only to Donors viewing their own card OR Admins */}
-                     {(role === 'Donor' || role === 'Admin') && (showDelete || showEdit) && (
+                    {(role === 'Donor' || role === 'Admin') && (showDelete || showEdit) && (
                         <div className="card-claims-list"> {/* Ensure class exists */}
                             <p style={{ marginTop: '0.5rem', fontWeight: 'bold' }}>Claims ({listing.claims?.length || 0}):</p>
                             <ul>
@@ -745,6 +769,9 @@ function AddFoodListingForm({ onListingCreated }) {
 
     // --- Direct Upload Handler ---
     const handleImageChange = async (event) => {
+        
+        console.log("[DEBUG] handleImageChange started."); // NEW DEBUG
+        
         const file = event.target.files[0];
         // Reset previous upload state immediately
         setImageUrl('');
@@ -753,54 +780,71 @@ function AddFoodListingForm({ onListingCreated }) {
         setError(null); // Clear previous error messages
 
         if (!file) {
-            console.log("No file selected or file removed.");
+            console.log("[DEBUG] handleImageChange: No file selected. Exiting."); // NEW DEBUG
             // Explicitly clear state if file is deselected
             if (imageRef.current) imageRef.current.value = null; // Clear the input visually
             return; // Exit if no file
         }
 
+        console.log("[DEBUG] File selected:", file.name); // NEW DEBUG
+
+        // Use the constants defined at the top of the file
         if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+            console.error("[DEBUG] CRITICAL: Cloudinary env vars missing!"); // NEW DEBUG
+            console.error("[DEBUG] CLOUDINARY_CLOUD_NAME:", CLOUDINARY_CLOUD_NAME); // NEW DEBUG
+            console.error("[DEBUG] CLOUDINARY_UPLOAD_PRESET:", CLOUDINARY_UPLOAD_PRESET); // NEW DEBUG
             setError("Image upload configuration is missing. Cannot upload image.");
             if (imageRef.current) imageRef.current.value = null; // Clear the input visually
-            return;
+            return; // EXIT HERE IF VARS ARE MISSING
         }
 
+        console.log("[DEBUG] Cloudinary config check passed."); // NEW DEBUG
         setIsUploadingImage(true);
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET); // Use constant
 
         try {
-            console.log(`Uploading to Cloudinary: ${CLOUDINARY_CLOUD_NAME}`);
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+            console.log(`[DEBUG] Uploading to Cloudinary: ${CLOUDINARY_CLOUD_NAME}`); // Use constant // NEW DEBUG
+            const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`; // Use constant
+            console.log("[DEBUG] Upload URL:", uploadUrl); // NEW DEBUG
+            
+            const response = await fetch(uploadUrl, {
                 method: 'POST',
                 body: formData,
             });
 
+            console.log("[DEBUG] Cloudinary response status:", response.status); // NEW DEBUG
             const data = await response.json(); // Always try to parse JSON
+            console.log("[DEBUG] Cloudinary response data:", data); // NEW DEBUG
+
 
             if (!response.ok) {
-                 // Use error message from Cloudinary if available
-                throw new Error(data?.error?.message || `Cloudinary upload failed with status ${response.status}`);
+                // Use error message from Cloudinary if available
+                const errorMessage = data?.error?.message || `Cloudinary upload failed with status ${response.status}`;
+                 console.error("[DEBUG] Cloudinary API error:", errorMessage); // NEW DEBUG
+                throw new Error(errorMessage);
             }
 
-            console.log("Cloudinary Response:", data);
+            console.log("[DEBUG] Cloudinary upload successful:", data); // NEW DEBUG
             setImageUrl(data.secure_url); // Store the returned URL
             setImagePublicId(data.public_id); // Store the public_id
             setSuccess("✓ Image uploaded successfully."); // Provide user feedback
 
         } catch (err) {
-            console.error("Cloudinary upload error:", err);
-            setError(`Image upload failed: ${err.message || 'Unknown error'}`);
+            console.error("[DEBUG] Catch block: Cloudinary upload error:", err); // NEW DEBUG
+            setError(`Image upload failed: ${err.message || 'Unknown network error'}`); // More specific error
             if (imageRef.current) imageRef.current.value = null; // Clear file input on error
         } finally {
+            console.log("[DEBUG] Upload process finished. isUploadingImage set to false."); // NEW DEBUG
             setIsUploadingImage(false);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log("[DEBUG] handleSubmit started."); // NEW DEBUG
 
         // --- Frontend Validations ---
         if (maxClaims < 1) { setError("Max claims must be at least 1."); return; }
@@ -809,12 +853,20 @@ function AddFoodListingForm({ onListingCreated }) {
         const expiryDate = new Date(expiryTime);
         if (isNaN(mfgDate.getTime()) || isNaN(expiryDate.getTime())) { setError('Invalid date format.'); return; }
         if (expiryDate <= mfgDate) { setError('Expiry time must be after manufacture time.'); return; }
+        
         // Check if an image was selected but hasn't finished uploading or failed
-        if (imageRef.current?.files?.length > 0 && !imageUrl && !isUploadingImage) {
-             setError("Image selected but upload did not complete. Please wait or re-select/remove the image.");
-             return;
-         }
-         // --- End Validations ---
+        const fileSelected = imageRef.current?.files?.length > 0;
+        console.log("[DEBUG] File selected check:", fileSelected); // NEW DEBUG
+        console.log("[DEBUG] imageUrl state:", imageUrl); // NEW DEBUG
+        console.log("[DEBUG] isUploadingImage state:", isUploadingImage); // NEW DEBUG
+
+        if (fileSelected && !imageUrl && !isUploadingImage) {
+            console.error("[DEBUG] Submit validation failed: Image selected but no URL and not uploading."); // NEW DEBUG
+            setError("Image selected but upload did not complete. Please wait or re-select/remove the image.");
+            return;
+        }
+        console.log("[DEBUG] Submit validation passed."); // NEW DEBUG
+        // --- End Validations ---
 
         setError(null);
         // Don't clear success message from image upload yet
@@ -833,13 +885,14 @@ function AddFoodListingForm({ onListingCreated }) {
                 imagePublicId: imagePublicId || null // Send Public ID or null
             };
 
-            console.log("Submitting to backend:", listingData); // Log data being sent
+            console.log("[DEBUG] Submitting to backend:", listingData); // Log data being sent
 
             await jsonFetch('/food', {
                 method: 'POST',
                 body: JSON.stringify(listingData), // Send JSON data
             });
 
+            console.log("[DEBUG] Backend submission successful."); // NEW DEBUG
             setSuccess('Listing created successfully!'); // Set final success message
             // Reset form completely
             setDescription(''); setQuantity(''); setLocation('');
@@ -853,11 +906,12 @@ function AddFoodListingForm({ onListingCreated }) {
 
 
         } catch (err) {
-            console.error("Backend submission error:", err);
+            console.error("[DEBUG] Backend submission error:", err); // NEW DEBUG
             // Use specific error from backend if available
             setError(err.message || "Failed to create listing. Please try again.");
             setSuccess(null); // Clear any previous success message
         } finally {
+            console.log("[DEBUG] Backend submission finished. isLoading set to false."); // NEW DEBUG
             setIsLoading(false);
         }
     };
@@ -879,8 +933,8 @@ function AddFoodListingForm({ onListingCreated }) {
                 </div>
                 <FormInput label="Pickup Location" id="location" type="text" placeholder="Full address" value={location} onChange={(e) => setLocation(e.target.value)} required={true} />
 
-                 {/* --- Updated File Input --- */}
-                 <FormInput
+                {/* --- Updated File Input --- */}
+                <FormInput
                     label="Image File (Optional)"
                     id="image"
                     type="file"
@@ -889,16 +943,16 @@ function AddFoodListingForm({ onListingCreated }) {
                     accept="image/*" // Specify acceptable file types
                     required={false}
                     disabled={isUploadingImage} // Disable while uploading to Cloudinary
-                 />
-                 {isUploadingImage && <p style={{marginTop:'-0.5rem', marginBottom: '1rem', fontSize: '0.9em'}}><Loader2 className="spinner-inline" /> Uploading image...</p>}
-                 {/* Display thumbnail or link after successful Cloudinary upload */}
-                 {imageUrl && !isUploadingImage && (
+                />
+                {isUploadingImage && <p style={{ marginTop: '-0.5rem', marginBottom: '1rem', fontSize: '0.9em' }}><Loader2 className="spinner-inline" /> Uploading image...</p>}
+                {/* Display thumbnail or link after successful Cloudinary upload */}
+                {imageUrl && !isUploadingImage && (
                     <div style={{ marginTop: '-0.5rem', marginBottom: '1rem', fontSize: '0.9em', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                         <img src={imageUrl} alt="Upload Preview" style={{ maxWidth: '80px', maxHeight: '80px', objectFit: 'cover', borderRadius: '4px' }} />
-                         {/* Optionally add a remove button here if needed before submit */}
+                        <img src={imageUrl} alt="Upload Preview" style={{ maxWidth: '80px', maxHeight: '80px', objectFit: 'cover', borderRadius: '4px' }} />
+                        {/* Optionally add a remove button here if needed before submit */}
                     </div>
                 )}
-                 {/* --- End Updated File Input --- */}
+                {/* --- End Updated File Input --- */}
 
 
                 <div className="form-group-grid">
@@ -953,8 +1007,10 @@ function EditFoodListingForm({ listing, onListingUpdated, onCancel }) {
     const [isLoading, setIsLoading] = useState(false); // Loading for backend submission
     const { jsonFetch } = useApi(); // Use jsonFetch
 
-    // --- Direct Upload Handler ---
+    // --- Direct Upload Handler (Identical to Add Form, but logging context) ---
     const handleImageChange = async (event) => {
+        console.log("[DEBUG] EditForm: handleImageChange started."); // NEW DEBUG
+        
         const file = event.target.files[0];
         setImageChanged(true); // Mark interaction
         // Reset previous upload state on new selection
@@ -963,68 +1019,84 @@ function EditFoodListingForm({ listing, onListingUpdated, onCancel }) {
 
 
         if (!file) {
-             console.log("Edit form: No file selected or file removed.");
+            console.log("[DEBUG] EditForm: No file selected or file removed."); // NEW DEBUG
             // Don't clear imageUrl/Id yet, let handleRemoveImage do that explicitly
             return;
         }
+        
+        console.log("[DEBUG] EditForm: File selected:", file.name); // NEW DEBUG
 
+
+        // Use the constants defined at the top of the file
         if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+            console.error("[DEBUG] EditForm: CRITICAL: Cloudinary env vars missing!"); // NEW DEBUG
             setError("Image upload configuration is missing.");
             if (imageRef.current) imageRef.current.value = null; // Clear visually
             setImageChanged(false); // Reset interaction marker
-            return;
+            return; // EXIT HERE IF VARS ARE MISSING
         }
 
+        console.log("[DEBUG] EditForm: Cloudinary config check passed."); // NEW DEBUG
         setIsUploadingImage(true);
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET); // Use constant
         // Optional: If you want Cloudinary to replace the image using the existing public_id
         // if (imagePublicId) formData.append('public_id', imagePublicId);
 
         try {
-             console.log(`Uploading update to Cloudinary: ${CLOUDINARY_CLOUD_NAME}`);
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+            console.log(`[DEBUG] EditForm: Uploading update to Cloudinary: ${CLOUDINARY_CLOUD_NAME}`); // NEW DEBUG
+             const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`; // Use constant
+             console.log("[DEBUG] EditForm: Upload URL:", uploadUrl); // NEW DEBUG
+
+            const response = await fetch(uploadUrl, {
                 method: 'POST',
                 body: formData,
             });
+            console.log("[DEBUG] EditForm: Cloudinary response status:", response.status); // NEW DEBUG
             const data = await response.json();
+             console.log("[DEBUG] EditForm: Cloudinary response data:", data); // NEW DEBUG
             if (!response.ok) {
-                throw new Error(data?.error?.message || `Cloudinary upload failed with status ${response.status}`);
+                 const errorMessage = data?.error?.message || `Cloudinary upload failed with status ${response.status}`;
+                 console.error("[DEBUG] EditForm: Cloudinary API error:", errorMessage); // NEW DEBUG
+                throw new Error(errorMessage);
             }
-            console.log("Cloudinary Update Response:", data);
+            console.log("[DEBUG] EditForm: Cloudinary upload successful:", data); // NEW DEBUG
             setImageUrl(data.secure_url); // Store the NEW URL
             setImagePublicId(data.public_id); // Store the NEW Public ID
             setSuccess("✓ New image uploaded successfully.");
 
         } catch (err) {
-            console.error("Cloudinary upload error (edit):", err);
-            setError(`New image upload failed: ${err.message || 'Unknown error'}`);
+            console.error("[DEBUG] EditForm: Catch block: Cloudinary upload error:", err); // NEW DEBUG
+            setError(`New image upload failed: ${err.message || 'Unknown network error'}`); // More specific
             if (imageRef.current) imageRef.current.value = null; // Clear file input
             setImageChanged(false); // Reset interaction marker
             // Revert to original image state on upload failure? Or keep empty?
-             // setImageUrl(listing.imageUrl || ''); // Revert to original
-             // setImagePublicId(listing.imagePublicId || '');
+            // setImageUrl(listing.imageUrl || ''); // Revert to original
+            // setImagePublicId(listing.imagePublicId || '');
         } finally {
+            console.log("[DEBUG] EditForm: Upload process finished. isUploadingImage set to false."); // NEW DEBUG
             setIsUploadingImage(false);
         }
     };
 
     // --- Handle Image Removal ---
     const handleRemoveImage = () => {
-         if (window.confirm("Are you sure you want to remove the current image? The change will be saved when you update the listing.")) {
-             setImageUrl('');
-             setImagePublicId('');
-             if (imageRef.current) imageRef.current.value = null; // Clear file input
-             setImageChanged(true); // Mark interaction
-             setSuccess("Image marked for removal."); // Inform user
-         }
+        if (window.confirm("Are you sure you want to remove the current image? The change will be saved when you update the listing.")) {
+            console.log("[DEBUG] Removing image."); // NEW DEBUG
+            setImageUrl('');
+            setImagePublicId('');
+            if (imageRef.current) imageRef.current.value = null; // Clear file input
+            setImageChanged(true); // Mark interaction
+            setSuccess("Image marked for removal."); // Inform user
+        }
     };
 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log("[DEBUG] EditForm: handleSubmit started."); // NEW DEBUG
 
         // --- Frontend Validations ---
         if (maxClaims < 1) { setError("Max claims must be at least 1."); return; }
@@ -1033,11 +1105,20 @@ function EditFoodListingForm({ listing, onListingUpdated, onCancel }) {
         const expiryDate = new Date(expiryTime);
         if (isNaN(mfgDate.getTime()) || isNaN(expiryDate.getTime())) { setError('Invalid date format.'); return; }
         if (expiryDate <= mfgDate) { setError('Expiry time must be after manufacture time.'); return; }
+        
         // Check if a new image was selected but hasn't finished uploading or failed
-        if (imageChanged && imageRef.current?.files?.length > 0 && !imageUrl && !isUploadingImage) {
+        const fileSelected = imageRef.current?.files?.length > 0;
+        console.log("[DEBUG] EditForm: File selected check:", fileSelected); // NEW DEBUG
+        console.log("[DEBUG] EditForm: imageChanged state:", imageChanged); // NEW DEBUG
+        console.log("[DEBUG] EditForm: imageUrl state:", imageUrl); // NEW DEBUG
+        console.log("[DEBUG] EditForm: isUploadingImage state:", isUploadingImage); // NEW DEBUG
+
+        if (imageChanged && fileSelected && !imageUrl && !isUploadingImage) {
+            console.error("[DEBUG] EditForm: Submit validation failed: New image selected but no URL and not uploading."); // NEW DEBUG
             setError("New image selected but upload did not complete. Please wait or re-select/remove.");
             return;
         }
+        console.log("[DEBUG] EditForm: Submit validation passed."); // NEW DEBUG
         // --- End Validations ---
 
         setError(null);
@@ -1058,13 +1139,14 @@ function EditFoodListingForm({ listing, onListingUpdated, onCancel }) {
                 imagePublicId: imagePublicId || null,
             };
 
-            console.log("Submitting Update to backend:", listingData);
+            console.log("[DEBUG] EditForm: Submitting Update to backend:", listingData); // NEW DEBUG
 
             // Use PUT request for update
             const updated = await jsonFetch(`/food/${listing._id}`, {
                 method: 'PUT',
                 body: JSON.stringify(listingData), // Send JSON
             });
+            console.log("[DEBUG] EditForm: Backend update successful."); // NEW DEBUG
             setSuccess('Listing updated successfully!'); // Set final success
             setImageChanged(false); // Reset image changed flag after successful save
             // Call parent callback AFTER state reset/success message
@@ -1074,10 +1156,11 @@ function EditFoodListingForm({ listing, onListingUpdated, onCancel }) {
 
 
         } catch (err) {
-            console.error("Backend update error:", err);
+            console.error("[DEBUG] EditForm: Backend update error:", err); // NEW DEBUG
             setError(err.message || "Failed to update listing. Please try again.");
             setSuccess(null); // Clear any previous success message
         } finally {
+            console.log("[DEBUG] EditForm: Backend submission finished. isLoading set to false."); // NEW DEBUG
             setIsLoading(false);
         }
     };
@@ -1087,21 +1170,21 @@ function EditFoodListingForm({ listing, onListingUpdated, onCancel }) {
             <h2>Edit Listing: {listing.description}</h2>
             <form onSubmit={handleSubmit}>
                 <AnimatePresence mode="wait">
-                     {/* Display error OR success */}
-                     {error && !success && <ErrorMessage key="error-msg" message={error} onDismiss={() => setError(null)} />}
-                     {success && <SuccessMessage key="success-msg" message={success} onDismiss={() => setSuccess(null)} />}
+                    {/* Display error OR success */}
+                    {error && !success && <ErrorMessage key="error-msg" message={error} onDismiss={() => setError(null)} />}
+                    {success && <SuccessMessage key="success-msg" message={success} onDismiss={() => setSuccess(null)} />}
                 </AnimatePresence>
 
                 {/* --- Form Inputs --- */}
-                 <FormInput label="Description" id="description-edit" type="text" value={description} onChange={(e) => setDescription(e.target.value)} required={true} />
-                 <div className="form-group-grid">
+                <FormInput label="Description" id="description-edit" type="text" value={description} onChange={(e) => setDescription(e.target.value)} required={true} />
+                <div className="form-group-grid">
                     <FormInput label="Quantity" id="quantity-edit" type="text" value={quantity} onChange={(e) => setQuantity(e.target.value)} required={true} />
                     <FormInput label="Maximum Claims" id="maxClaims-edit" type="number" min="1" value={maxClaims} onChange={(e) => setMaxClaims(Number(e.target.value) || 1)} required={true} />
                 </div>
                 <FormInput label="Pickup Location" id="location-edit" type="text" value={location} onChange={(e) => setLocation(e.target.value)} required={true} />
 
-                 {/* --- Updated File Input & Preview/Remove --- */}
-                 <FormInput
+                {/* --- Updated File Input & Preview/Remove --- */}
+                <FormInput
                     label="Image (Select file to replace, or Remove below)"
                     id="image-edit"
                     type="file"
@@ -1110,22 +1193,22 @@ function EditFoodListingForm({ listing, onListingUpdated, onCancel }) {
                     accept="image/*" // Specify types
                     required={false}
                     disabled={isUploadingImage}
-                 />
-                 {isUploadingImage && <p style={{marginTop:'-0.5rem', marginBottom: '1rem', fontSize: '0.9em'}}><Loader2 className="spinner-inline" /> Uploading new image...</p>}
+                />
+                {isUploadingImage && <p style={{ marginTop: '-0.5rem', marginBottom: '1rem', fontSize: '0.9em' }}><Loader2 className="spinner-inline" /> Uploading new image...</p>}
 
-                 {/* Show current/new image preview OR 'No Image' text */}
-                 {!isUploadingImage && imageUrl && (
-                     <div style={{ marginTop: '-0.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {/* Show current/new image preview OR 'No Image' text */}
+                {!isUploadingImage && imageUrl && (
+                    <div style={{ marginTop: '-0.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <img src={imageUrl} alt="Current/Preview" style={{ maxWidth: '80px', maxHeight: '80px', objectFit: 'cover', borderRadius: '4px' }} />
                         <Button type="button" onClick={handleRemoveImage} className="button-icon-only button-danger button-small" title="Mark Image for Removal">
                             <ImageOff size={16} />
                         </Button>
                     </div>
                 )}
-                 {!isUploadingImage && !imageUrl && (
+                {!isUploadingImage && !imageUrl && (
                     <p style={{ marginTop: '-0.5rem', marginBottom: '1rem', fontSize: '0.9em', color: '#888' }}>(No image)</p>
                 )}
-                 {/* --- End Updated File Input --- */}
+                {/* --- End Updated File Input --- */}
 
 
                 <div className="form-group-grid">
@@ -1134,7 +1217,7 @@ function EditFoodListingForm({ listing, onListingUpdated, onCancel }) {
                 </div>
                 {/* --- End Form Inputs --- */}
 
-                <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
+                <div style={{ marginTop: '1.5rem', display: 'flex', gap: 'rem' }}>
                     <Button type="submit" isLoading={isLoading || isUploadingImage} disabled={isUploadingImage} className="button-primary">
                         <Edit3 className="button-icon" />Update Listing
                     </Button>
@@ -1200,7 +1283,7 @@ function DonorDashboard() {
             console.error("Error deleting listing:", err);
             setError(err.message || "Failed to delete listing.");
         } finally {
-             // Turn off delete loading state if used
+            // Turn off delete loading state if used
         }
     };
 
@@ -1218,7 +1301,7 @@ function DonorDashboard() {
                         setSuccessMessage('Listing created successfully!'); // Set success message
                         handleListingCreatedOrUpdated();
                     }}
-                 />
+                />
             );
         }
         if (view === 'edit' && listingToEdit) {
@@ -1228,9 +1311,9 @@ function DonorDashboard() {
                     onListingUpdated={(updatedListing) => { // updatedListing might be passed back
                         setSuccessMessage('Listing updated successfully!'); // Set success message
                         // Optionally update local state immediately if needed, otherwise rely on fetch
-                         setMyListings(currentListings =>
-                             currentListings.map(l => (l._id === updatedListing._id ? updatedListing : l))
-                         );
+                        setMyListings(currentListings =>
+                            currentListings.map(l => (l._id === updatedListing._id ? updatedListing : l))
+                        );
                         handleListingCreatedOrUpdated(); // Switches view and refetches
                     }}
                     onCancel={() => { setView('view'); setListingToEdit(null); }}
@@ -1244,12 +1327,12 @@ function DonorDashboard() {
         return (
             <>
                 <div className="dashboard-actions"> {/* Ensure class exists */}
-                    <Button onClick={() => { setView('add'); setSuccessMessage(null); setError(null);}} className="button-success">
+                    <Button onClick={() => { setView('add'); setSuccessMessage(null); setError(null); }} className="button-success">
                         <PlusCircle className="button-icon" /> Add New Listing
                     </Button>
                 </div>
                 <AnimatePresence mode="wait">
-                     {/* Show error OR success */}
+                    {/* Show error OR success */}
                     {error && <ErrorMessage key="error-msg" message={error} onDismiss={() => setError(null)} />}
                     {successMessage && <SuccessMessage key="success-msg" message={successMessage} onDismiss={() => setSuccessMessage(null)} />}
                 </AnimatePresence>
@@ -1312,14 +1395,17 @@ function ReceiverDashboard() {
             console.log("Fetching available listings...");
             const data = await jsonFetch('/food'); // Backend filters expired/full
             console.log("Available listings received:", data);
-             // Ensure data is always an array
-             const available = Array.isArray(data) ? data : [];
+            // Ensure data is always an array
+            const available = Array.isArray(data) ? data : [];
             // Filter out listings where the current receiver has already claimed a slot
-             const filteredForUserClaims = user
+            // Keep this logic, but maybe show them differently later?
+            const filteredForUserClaims = user
                 ? available.filter(l => !(l.claims || []).some(c => c.userId && c.userId.toString() === user._id.toString()))
                 : available; // Show all if user not loaded? Or handle differently?
-             // Maybe show claimed ones differently instead of filtering? Reverting for now.
-             setAllListings(available);
+            
+            // Reverting the filter for now - show all, FoodCard handles display
+            // setAllListings(filteredForUserClaims); 
+            setAllListings(available);
 
         } catch (err) {
             console.error("Error fetching available listings:", err);
@@ -1328,7 +1414,7 @@ function ReceiverDashboard() {
         } finally {
             setIsLoading(false);
         }
-    }, [jsonFetch, user]); // Depend on user to refilter if user logs in/out?
+    }, [jsonFetch, user]); // Depend on user
 
     // Handle claim action
     const handleClaimFood = async (listingId) => {
@@ -1358,8 +1444,8 @@ function ReceiverDashboard() {
         } catch (err) {
             console.error("Error claiming listing:", err);
             setError(err.message || "Failed to claim listing.");
-             // Optional: Refetch listings on error to get latest status
-             fetchAllListings();
+            // Optional: Refetch listings on error to get latest status
+            fetchAllListings();
         } finally {
             setClaimingId(null); // Reset loading state for the button
         }
@@ -1396,16 +1482,16 @@ function ReceiverDashboard() {
                                     key={listing._id}
                                     listing={listing}
                                     onClaim={() => handleClaimFood(listing._id)}
-                                    // Pass loading state specific to this card's claim button
-                                    // You might need to adjust FoodCard to accept an 'isClaiming' prop
-                                    // Or adjust the Button component inside FoodCard if `onClaim` is the only action
+                                // Pass loading state specific to this card's claim button
+                                // You might need to adjust FoodCard to accept an 'isClaiming' prop
+                                // Or adjust the Button component inside FoodCard if `onClaim` is the only action
                                 />
                             ))}
                         </AnimatePresence>
                     </div>
                 )}
-                 {/* Show loading indicator if fetching updates */}
-                 {isLoading && <LoadingSpinner />}
+                {/* Show loading indicator if fetching updates */}
+                {isLoading && <LoadingSpinner />}
             </div>
         </PageWrapper>
     );
@@ -1465,7 +1551,7 @@ const generatePDF = (listings) => {
         theme: 'grid', // or 'striped' or 'plain'
         styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
         headStyles: { fillColor: [79, 70, 229], textColor: 255 }, // Header color (primary), white text
-         columnStyles: { // Adjust column widths if needed
+        columnStyles: { // Adjust column widths if needed
             0: { cellWidth: 40 }, // Description
             1: { cellWidth: 30 }, // Donor
             2: { cellWidth: 20 }, // Status
@@ -1490,8 +1576,8 @@ const generatePDF = (listings) => {
 function ListingListTable({ listings, onDelete }) {
     return (
         <div className="admin-table-card"> {/* Ensure class exists */}
-             {/* Title and Download Button */}
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 1.5rem 1rem 1.5rem', borderBottom: '1px solid #e5e7eb' }}>
+            {/* Title and Download Button */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 1.5rem 1rem 1.5rem', borderBottom: '1px solid #e5e7eb' }}>
                 <h3>Food Listings</h3>
                 <Button
                     onClick={() => generatePDF(listings)} // Call PDF generation function
@@ -1519,20 +1605,20 @@ function ListingListTable({ listings, onDelete }) {
                         {listings.map(listing => {
                             const isExpired = new Date(listing.expiryTime) < new Date();
                             const isFullyClaimed = (listing.claims?.length || 0) >= listing.maxClaims;
-                             const status = isExpired ? "Expired" : (isFullyClaimed ? "Fully Claimed" : "Active");
+                            const status = isExpired ? "Expired" : (isFullyClaimed ? "Fully Claimed" : "Active");
                             return (
                                 <tr key={listing._id} className={isExpired ? 'expired-row' : ''}> {/* Ensure class exists */}
                                     <td>{listing.description}</td>
                                     <td>{listing.donorName || 'N/A'}</td>
                                     <td>
-                                         {/* Ensure status tag classes exist */}
-                                         <span className={`status-tag status-${status.toLowerCase().replace(' ', '-')}`}>
-                                             {status}
-                                         </span>
+                                        {/* Ensure status tag classes exist */}
+                                        <span className={`status-tag status-${status.toLowerCase().replace(' ', '-')}`}>
+                                            {status}
+                                        </span>
                                     </td>
                                     <td>{new Date(listing.expiryTime).toLocaleString()}</td>
                                     <td>{listing.claims?.length || 0}/{listing.maxClaims}</td>
-                                     <td>{new Date(listing.createdAt).toLocaleDateString()}</td>
+                                    <td>{new Date(listing.createdAt).toLocaleDateString()}</td>
                                     <td>
                                         <Button onClick={() => onDelete(listing._id)} className="button-icon-only button-danger" title="Delete Listing"> {/* Ensure classes exist */}
                                             <Trash2 />
@@ -1602,10 +1688,10 @@ function AdminDashboard() {
             setSuccessMessage('Listing deleted successfully by Admin.');
             // Optimistic UI update or refetch
             // setListings(prev => prev.filter(l => l._id !== listingId));
-             fetchData(); // Refetch data to ensure consistency after delete
+            fetchData(); // Refetch data to ensure consistency after delete
         } catch (err) {
-             console.error("Error deleting listing (Admin):", err);
-             setError(err.message || "Failed to delete listing.");
+            console.error("Error deleting listing (Admin):", err);
+            setError(err.message || "Failed to delete listing.");
         } finally {
             // Turn off specific loading state if used
         }
@@ -1628,8 +1714,8 @@ function AdminDashboard() {
                     {successMessage && <SuccessMessage key="success-msg" message={successMessage} onDismiss={() => setSuccessMessage(null)} />}
                 </AnimatePresence>
 
-                 {/* Filter UI */}
-                 <div className="admin-filter-bar"> {/* Ensure class exists */}
+                {/* Filter UI */}
+                <div className="admin-filter-bar"> {/* Ensure class exists */}
                     <label htmlFor="admin-filter" className="form-label">Filter Listings By Creation Date:</label>
                     <select
                         id="admin-filter"
@@ -1646,8 +1732,8 @@ function AdminDashboard() {
                     </select>
                 </div>
 
-                 {/* Stat Cards */}
-                 <div className="admin-stats-grid"> {/* Ensure class exists */}
+                {/* Stat Cards */}
+                <div className="admin-stats-grid"> {/* Ensure classes exist */}
                     <StatCard title="Total Users" value={stats.totalUsers} icon={<Users />} className="stat-users" />
                     <StatCard title="Total Donors" value={stats.totalDonors} icon={<HeartHandshake />} className="stat-donors" />
                     <StatCard title="Listings (Filtered Period)" value={stats.totalListings} icon={<Package />} className="stat-listings" />
@@ -1655,13 +1741,14 @@ function AdminDashboard() {
                 </div>
 
 
-                 {/* Listings Table */}
-                 <div className="admin-tables-container"> {/* Ensure class exists */}
-                     {/* Show loading overlay or indicator when refetching based on filter */}
-                     {isLoading && <div className="loading-overlay"><Loader2 className="spinner-inline" /> Loading listings...</div>}
+                {/* Listings Table */}
+                <div className="admin-tables-container"> {/* Ensure class exists */}
+                    {/* Show loading overlay or indicator when refetching based on filter */}
+                    {isLoading && <div className="loading-overlay"><Loader2 className="spinner-inline" /> Loading listings...</div>}
                     <ListingListTable listings={listings} onDelete={handleDeleteListing} />
                 </div>
             </div>
         </PageWrapper>
     );
 }
+
