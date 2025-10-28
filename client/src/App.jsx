@@ -43,7 +43,7 @@ import 'jspdf-autotable';
 
 // --- HARD-CODED VALUES ---
 // We are hard-coding these to bypass any .env or Vercel issues
-const BACKEND_URL = 'https://leftoverlink-2.onrender.com/api';
+const BACKEND_URL = 'https://leftoverlink-3.onrender.com/api';
 const CLOUDINARY_CLOUD_NAME = 'dox0hqyhh';
 const CLOUDINARY_UPLOAD_PRESET = 'leftoverlink_preset';
 // --- END HARD-CODED VALUES ---
